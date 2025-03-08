@@ -2,7 +2,7 @@ const { Telegraf } = require('telegraf');
 const axios = require('axios');
 
 // 🔹 جایگزین کنید با توکن واقعی ربات تلگرام
-const BOT_TOKEN = 'YOUR_BOT_TOKEN';
+const BOT_TOKEN = '6466766400:AAF9GJyaWWLKXOPsZayIcSF-6vGVyViS6lw';
 const bot = new Telegraf(BOT_TOKEN);
 
 // 🎯 تابع بررسی لینک اینستاگرام
