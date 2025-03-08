@@ -2,7 +2,7 @@ const { Telegraf } = require('telegraf');
 const axios = require('axios');
 
 // توکن ربات خود را جایگزین کنید
-const bot = new Telegraf('YOUR_BOT_TOKEN');
+const bot = new Telegraf('6466766400:AAF9GJyaWWLKXOPsZayIcSF-6vGVyViS6lw');
 
 // ارسال ویدیو به کاربر
 bot.on('text', async (ctx) => {
