@@ -1,63 +1,57 @@
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
 
-// 🔹 جایگزین کنید با توکن واقعی ربات تلگرام
-const BOT_TOKEN = '6466766400:AAF9GJyaWWLKXOPsZayIcSF-6vGVyViS6lw';
-const bot = new Telegraf(BOT_TOKEN);
+// توکن ربات خود را جایگزین کنید
+const bot = new Telegraf('YOUR_BOT_TOKEN');
 
-// 🎯 تابع بررسی لینک اینستاگرام
-const isValidInstagramReel = (url) => {
-    return url.includes('instagram.com/reel/') || url.includes('instagram.com/p/');
-};
-
-// 📥 دریافت پیام‌های چت
+// ارسال ویدیو به کاربر
 bot.on('text', async (ctx) => {
-    const message = ctx.message.text.trim();
+  const text = ctx.message.text;
 
-    // 🔎 بررسی لینک اینستاگرام
-    if (isValidInstagramReel(message)) {
-        try {
-            // ⏳ نمایش تایپینگ هنگام پردازش درخواست
-            await ctx.telegram.sendChatAction(ctx.chat.id, 'typing');
+  // اگر پیامی شامل لینک اینستاگرام باشد
+  if (text.includes('https://www.instagram.com/reel/')) {
+    const url = `https://open.wiki-api.ir/apis-1/InstagramDownloader?url=${text}`;
+    
+    try {
+      // درخواست به API برای دانلود ویدیو
+      const response = await axios.get(url);
+      const data = response.data;
 
-            // 🚀 ارسال درخواست به API
-            const apiUrl = `https://open.wiki-api.ir/apis-1/InstagramDownloader?url=${encodeURIComponent(message)}`;
-            const response = await axios.get(apiUrl);
+      // بررسی اینکه داده‌ها موجود است و لینک دانلود ویدیو موجود است
+      if (data.status && data.results && data.results.medias && data.results.medias[0]) {
+        const downloadLink = data.results.medias[0].download_link;
 
-            // ✅ بررسی موفقیت درخواست
-            if (response.data.status && response.data.results.medias.length > 0) {
-                const videoUrl = response.data.results.medias[0].download_link;
-                const owner = response.data.results.owner || 'نامشخص';
-                const caption = response.data.results.caption || 'بدون کپشن';
-                const views = response.data.results.views || 'نامشخص';
-                const shares = response.data.results.shares || 'نامشخص';
-                const comments = response.data.results.comments || 'نامشخص';
-
-                // 🎥 ارسال ویدیو همراه با کپشن
-                await ctx.replyWithVideo(
-                    { url: videoUrl },
-                    {
-                        caption: `🎬 **ویدیوی اینستاگرام دریافت شد!**\n\n👤 **سازنده:** _${owner}_\n📌 **کپشن:** _${caption}_\n👀 **بازدیدها:** _${views}_\n🔄 **اشتراک‌گذاری:** _${shares}_\n💬 **نظرات:** _${comments}_\coder : @abj0o`,
-                        parse_mode: 'Markdown'
-                    }
-                );
-
-            } else {
-                await ctx.reply('⚠️ **خطا:** ویدیو یافت نشد! لطفاً لینک را بررسی کنید.');
-            }
-        } catch (error) {
-            console.error(error);
-            await ctx.reply('🚨 **مشکلی پیش آمد!** لطفاً مجدداً تلاش کنید.');
+        if (!downloadLink) {
+          ctx.reply('لینک دانلود ویدیو در دسترس نیست.');
+          return;
         }
-    } else {
-        // ⛔️ اگر لینک نامعتبر باشد
-        await ctx.reply('❌ **لطفاً یک لینک معتبر اینستاگرام ارسال کنید!**\n\n🔹 فقط لینک‌های **Reels** و **پست‌ها** پشتیبانی می‌شوند.');
+
+        // دریافت ویدیو از لینک
+        const videoResponse = await axios.get(downloadLink, { responseType: 'arraybuffer' });
+        const videoBuffer = Buffer.from(videoResponse.data, 'binary');
+
+        if (videoBuffer.length === 0) {
+          ctx.reply('ویدیو خالی است یا مشکلی در بارگذاری پیش آمده.');
+          return;
+        }
+
+        // ارسال ویدیو به کاربر
+        const caption = `🎬 **ویدیوی اینستاگرام دریافت شد!**\n\n👤 **سازنده:** _${data.results.owner}_\n📌 **کپشن:** _${data.results.caption}_\n👀 **بازدیدها:** _${data.results.views}_\n🔄 **اشتراک‌گذاری:** _${data.results.shares}_\n💬 **نظرات:** _${data.results.comments}_`;
+
+        await ctx.replyWithVideo({ source: videoBuffer }, { caption: caption, parse_mode: 'Markdown' });
+      } else {
+        ctx.reply('خطا در دریافت اطلاعات ویدیو.');
+      }
+    } catch (error) {
+      console.error('خطا در درخواست به API:', error);
+      ctx.reply('مشکلی در دریافت ویدیو پیش آمده.');
     }
+  }
 });
 
-// 🚀 راه‌اندازی ربات
-bot.launch().then(() => console.log('🤖 Bot is running...'));
-
-// 🛑 کنترل سیگنال‌های خروجی برای توقف ایمن ربات
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// شروع ربات
+bot.launch().then(() => {
+  console.log('🤖 ربات در حال اجرا است...');
+}).catch((error) => {
+  console.error('🚨 خطا در راه‌اندازی ربات:', error);
+});
