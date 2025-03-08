@@ -10,7 +10,7 @@ bot.on('text', async (ctx) => {
 
   // اگر پیامی شامل لینک اینستاگرام باشد
   if (text.includes('https://www.instagram.com/reel/')) {
-    const url = `https://open.wiki-api.ir/apis-1/InstagramDownloader?url=${text}`;
+    const url = `http://api4dev.ir/api/ig.php?url=${text}`;
     
     try {
       // درخواست به API برای دانلود ویدیو
@@ -18,8 +18,8 @@ bot.on('text', async (ctx) => {
       const data = response.data;
 
       // بررسی اینکه داده‌ها موجود است و لینک دانلود ویدیو موجود است
-      if (data.status && data.results && data.results.medias && data.results.medias[0]) {
-        const downloadLink = data.results.medias[0].download_link;
+      if (data.ok && data.result && data.result.url) {
+        const downloadLink = data.result.url;
 
         if (!downloadLink) {
           ctx.reply('لینک دانلود ویدیو در دسترس نیست.');
@@ -31,20 +31,20 @@ bot.on('text', async (ctx) => {
         const videoBuffer = Buffer.from(videoResponse.data, 'binary');
 
         if (videoBuffer.length === 0) {
-          ctx.reply('ویدیو خالی است یا مشکلی در بارگذاری پیش آمده.');
+          ctx.reply('ویدیو خالی است یا مشکلی در بارگذاری پیش آمده. لطفاً دوباره امتحان کنید.');
           return;
         }
 
-        // ارسال ویدیو به کاربر
-        const caption = `🎬 **ویدیوی اینستاگرام دریافت شد!**\n\n👤 **سازنده:** _${data.results.owner}_\n📌 **کپشن:** _${data.results.caption}_\n👀 **بازدیدها:** _${data.results.views}_\n🔄 **اشتراک‌گذاری:** _${data.results.shares}_\n💬 **نظرات:** _${data.results.comments}_`;
+        // ارسال ویدیو به کاربر به‌صورت ریپلای
+        const caption = `🎬 **ویدیوی اینستاگرام دریافت شد!**\n\n👤 **سازنده:** _${data.result.owner}_\n📌 **کپشن:** _${data.result.caption}_\n👀 **بازدیدها:** _${data.result.views}_\n🔄 **اشتراک‌گذاری:** _${data.result.shares}_\n💬 **نظرات:** _${data.result.comments}_`;
 
-        await ctx.replyWithVideo({ source: videoBuffer }, { caption: caption, parse_mode: 'Markdown' });
+        await ctx.replyWithVideo({ source: videoBuffer }, { caption: caption, parse_mode: 'Markdown', reply_to_message_id: ctx.message.message_id });
       } else {
-        ctx.reply('خطا در دریافت اطلاعات ویدیو.');
+        ctx.reply('خطا در دریافت اطلاعات ویدیو. ممکن است لینک اشتباه باشد.');
       }
     } catch (error) {
       console.error('خطا در درخواست به API:', error);
-      ctx.reply('مشکلی در دریافت ویدیو پیش آمده.');
+      ctx.reply('مشکلی در دریافت ویدیو پیش آمده. لطفاً دوباره امتحان کنید.');
     }
   }
 });
