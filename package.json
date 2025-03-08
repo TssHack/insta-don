@@ -1,0 +1,19 @@
+{
+  "name": "instagram-reels-downloader-bot",
+  "version": "1.0.0",
+  "description": "یک ربات تلگرامی برای دانلود و ارسال مستقیم ویدیوهای Reels اینستاگرام",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "telegraf": "^4.12.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["telegram-bot", "instagram-downloader", "nodejs"],
+  "author": "Ehsan Fazli",
+  "license": "MIT"
+}
