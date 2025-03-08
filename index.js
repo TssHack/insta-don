@@ -14,28 +14,25 @@ bot.on('text', async (ctx) => {
       const data = response.data;
 
       if (data.ok && data.result && data.result.url) {
-        const redirectUrl = data.result.url;
+        let videoUrl = data.result.url;
 
-        try {
-          // دریافت لینک نهایی ویدیو
-          const videoResponse = await axios.get(redirectUrl, {
-            maxRedirects: 5,
-            responseType: 'stream' // دریافت مستقیم فایل ویدیو
-          });
+        // بررسی نوع لینک (MP4 بودن)
+        const headResponse = await axios.head(videoUrl);
+        const contentType = headResponse.headers['content-type'];
 
-          console.log('📥 دریافت لینک نهایی ویدیو:', redirectUrl);
-
-          // ارسال ویدیو به کاربر
-          await ctx.replyWithVideo({ source: videoResponse.data }, {
-            caption: `🎥 **ویدیوی اینستاگرام دریافت شد!**\n\n👤 **سازنده:** _${data.result.owner}_\n📌 **کپشن:** _${data.result.caption}_\n👀 **بازدیدها:** _${data.result.views}_\n💬 **نظرات:** _${data.result.comments}_\n🔄 **اشتراک‌گذاری:** _${data.result.shares}_`,
-            parse_mode: 'Markdown',
-            reply_to_message_id: ctx.message.message_id
-          });
-
-        } catch (error) {
-          console.error('🚨 خطا در دانلود ویدیو:', error);
-          ctx.reply('❌ مشکلی در ارسال ویدیو پیش آمد. لطفاً دوباره امتحان کنید.');
+        if (!contentType.includes('video/mp4')) {
+          console.error('🚨 لینک دریافت‌شده، فایل ویدیویی نیست!');
+          return ctx.reply('❌ خطا: ویدیوی دریافت‌شده، یک فایل MP4 معتبر نیست.');
         }
+
+        console.log('📥 لینک ویدیو دریافت شد:', videoUrl);
+
+        // ارسال ویدیو
+        await ctx.replyWithVideo(videoUrl, {
+          caption: `🎥 **ویدیوی اینستاگرام دریافت شد!**\n\n👤 **سازنده:** _${data.result.owner}_\n📌 **کپشن:** _${data.result.caption}_\n👀 **بازدیدها:** _${data.result.views}_\n💬 **نظرات:** _${data.result.comments}_\n🔄 **اشتراک‌گذاری:** _${data.result.shares}_`,
+          parse_mode: 'Markdown',
+          reply_to_message_id: ctx.message.message_id
+        });
 
       } else {
         ctx.reply('⚠️ خطا در دریافت اطلاعات ویدیو. ممکن است لینک اشتباه باشد.');
